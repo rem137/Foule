@@ -137,7 +137,14 @@ def run_evolution() -> None:
         next_population.append(deepcopy(best))
 
         while len(next_population) < TAILLE_POPULATION:
-            p1, p2 = random.sample(hof_individus, 2)
+            if len(hof_individus) >= 2:
+                p1, p2 = random.sample(hof_individus, 2)
+            else:
+                # If the hall of fame is still too small, breed the best
+                # individual with itself. This avoids ``random.sample``
+                # raising ``ValueError`` when the population is < 2.
+                p1 = p2 = hof_individus[0]
+
             enfant = crossover(p1, p2)
             enfant.mutate(taux_mutation)
             next_population.append(enfant)
