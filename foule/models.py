@@ -13,6 +13,22 @@ import torch.nn as nn
 from . import environment as env
 
 
+class ResidualBlock(nn.Module):
+    """Simple residual convolution block."""
+
+    def __init__(self, channels: int) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.relu = nn.ReLU()
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore[override]
+        out = self.conv1(x)
+        out = self.relu(out)
+        out = self.conv2(out)
+        return self.relu(out + x)
+
+
 class NeuralFouloide(nn.Module):
     """Simple convolutional policy network controlling a Fouloide."""
 
@@ -22,16 +38,19 @@ class NeuralFouloide(nn.Module):
         self.actions: List[str] = ["rien", "haut", "bas", "gauche", "droite", "manger"]
         self.nb_actions = len(self.actions)
 
+        size = 2 * rayon_vision + 1
         self.conv = nn.Sequential(
-            nn.Conv2d(2, 8, kernel_size=3, padding=1),
+            nn.Conv2d(2, 16, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(8, 16, kernel_size=3, padding=1),
+            nn.Conv2d(16, 32, kernel_size=3, padding=1),
             nn.ReLU(),
+            ResidualBlock(32),
         )
         self.fc = nn.Sequential(
-            nn.Linear(16 * (2 * rayon_vision + 1) ** 2, 32),
+            nn.Linear(32 * size * size, 64),
             nn.ReLU(),
-            nn.Linear(32, self.nb_actions),
+            nn.Dropout(0.2),
+            nn.Linear(64, self.nb_actions),
             nn.Tanh(),
         )
 
