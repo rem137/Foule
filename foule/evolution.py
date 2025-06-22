@@ -6,6 +6,7 @@ import random
 import time
 from copy import deepcopy
 from typing import List
+import multiprocessing as mp
 
 import numpy as np
 import torch
@@ -61,6 +62,13 @@ def charger_meilleur(path: str = "meilleur.pt") -> NeuralFouloide | None:
         return None
 
 
+def eval_population(population: List[NeuralFouloide], seeds: List[int], n_ticks: int) -> List[float]:
+    """Evaluate the entire population in parallel."""
+    with mp.Pool() as pool:
+        args = [(deepcopy(ind), seeds, n_ticks) for ind in population]
+        return pool.starmap(simuler_multi, args)
+
+
 def run_evolution() -> None:
     global SEEDS, compteur_seed
     meilleur = charger_meilleur()
@@ -85,7 +93,7 @@ def run_evolution() -> None:
             SEEDS = [random.randint(0, 10000) for _ in range(3)]
         compteur_seed += 1
 
-        scores = [simuler_multi(ind, SEEDS, NB_TICKS) for ind in population]
+        scores = eval_population(population, SEEDS, NB_TICKS)
         scores_population = list(zip(scores, population))
         scores_population.sort(reverse=True, key=lambda x: x[0])
 

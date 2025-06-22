@@ -54,7 +54,8 @@ class NeuralFouloide(nn.Module):
             nn.Tanh(),
         )
 
-        self.device = torch.device("cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(self.device)
         self.reset()
 
     def reset(self) -> None:
