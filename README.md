@@ -13,6 +13,9 @@ pip install -r requirements.txt
 
 ## Training
 
+The training loop now evaluates the population in parallel using multiple CPU cores
+and automatically uses a GPU if available. Simply run:
+
 ```bash
 python -m foule.scripts.train
 ```
